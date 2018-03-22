@@ -1,23 +1,16 @@
 class Planting < ActiveRecord::Base
   extend FriendlyId
   include PhotoCapable
+  include Finishable
   friendly_id :planting_slug, use: %i(slugged finders)
 
   # Constants
-  SUNNINESS_VALUES = %w(sun semi-shade shade)
+  SUNNINESS_VALUES = %w(sun semi-shade shade).freeze
   PLANTED_FROM_VALUES = [
-    'seed',
-    'seedling',
-    'cutting',
-    'root division',
-    'runner',
-    'bulb',
-    'root/tuber',
-    'bare root plant',
-    'advanced plant',
-    'graft',
-    'layering'
-  ]
+    'seed', 'seedling', 'cutting', 'root division', 'runner',
+    'bulb', 'root/tuber', 'bare root plant', 'advanced plant',
+    'graft', 'layering'
+  ].freeze
 
   ##
   ## Triggers
@@ -28,12 +21,17 @@ class Planting < ActiveRecord::Base
   belongs_to :crop, counter_cache: true
   has_many :harvests, dependent: :destroy
 
+  #
+  # Ancestry of food
+  belongs_to :parent_seed, class_name: 'Seed', foreign_key: 'parent_seed_id' # parent
+  has_many :child_seeds, class_name: 'Seed',
+                         foreign_key: 'parent_planting_id', dependent: :nullify # children
+
   ##
   ## Scopes
-  default_scope { joins(:owner).order(created_at: :desc) }
-  scope :finished, -> { where(finished: true) }
-  scope :current, -> { where(finished: false) }
+  default_scope { joins(:owner) } # Ensures the owner still exists
   scope :interesting, -> { has_photos.one_per_owner }
+  scope :recent, -> { order(created_at: :desc) }
   scope :one_per_owner, lambda {
     joins("JOIN members m ON (m.id=plantings.owner_id)
            LEFT OUTER JOIN plantings p2
@@ -50,6 +48,7 @@ class Planting < ActiveRecord::Base
   validates :garden, presence: true
   validates :crop, presence: true, approved: { message: "must be present and exist in our database" }
   validate :finished_must_be_after_planted
+  validate :owner_must_match_garden_owner
   validates :quantity, allow_nil: true, numericality: {
     only_integer: true, greater_than_or_equal_to: 0
   }
@@ -79,7 +78,7 @@ class Planting < ActiveRecord::Base
   end
 
   def default_photo
-    photos.first
+    photos.order(created_at: :desc).first
   end
 
   def planted?
@@ -123,12 +122,6 @@ class Planting < ActiveRecord::Base
     update(days_to_first_harvest: days_to_first_harvest, days_to_last_harvest: days_to_last_harvest)
   end
 
-  private
-
-  def harvests_with_dates
-    harvests.where.not(harvested_at: nil)
-  end
-
   def first_harvest_date
     harvests_with_dates.minimum(:harvested_at)
   end
@@ -137,9 +130,19 @@ class Planting < ActiveRecord::Base
     harvests_with_dates.maximum(:harvested_at)
   end
 
+  private
+
+  def harvests_with_dates
+    harvests.where.not(harvested_at: nil)
+  end
+
   # check that any finished_at date occurs after planted_at
   def finished_must_be_after_planted
     return unless planted_at && finished_at # only check if we have both
     errors.add(:finished_at, "must be after the planting date") unless planted_at < finished_at
+  end
+
+  def owner_must_match_garden_owner
+    errors.add(:owner, "must be the same as garden") unless owner == garden.owner
   end
 end

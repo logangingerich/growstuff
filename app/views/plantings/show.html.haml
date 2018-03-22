@@ -9,8 +9,11 @@
   = tag("meta", property: "og:url", content: request.original_url)
   = tag("meta", property: "og:site_name", content: ENV['GROWSTUFF_SITE_NAME'])
 
+- content_for :buttonbar do
+  = render 'plantings/actions', planting: @planting
+
 .row.planting
-  .col-md-6
+  .col-xs-12.col-sm-6
     %dl.dl-horizontal.planting-attributes
       %dt Owner:
       %dd
@@ -25,14 +28,17 @@
       %dd
         = link_to "#{@planting.owner}'s", @planting.owner
         = link_to @planting.garden, @planting.garden
-        - unless  @planting.owner.location.blank?
+        - if @planting.owner.location.present?
           (#{@planting.owner.location})
       %dt Quantity:
       %dd= display_planting_quantity(@planting)
 
-      - unless @planting.planted_from.blank?
-        %dt Planted from:
-        %dd= display_planted_from(@planting)
+      %dt Planted from:
+      %dd
+        - if @planting.parent_seed
+          = link_to @planting.parent_seed, seed_path(@planting.parent_seed)
+        - else
+          = display_planted_from(@planting)
 
       %dt Sun or shade?
       %dd
@@ -45,11 +51,11 @@
         %dd
           - if @planting.finish_predicted_at.present?
             = @planting.finish_predicted_at
-          - else
+          - elsif @planting.planted_at.blank?
             %strong Set planted date to get predictions
-        %dt Finished:
-        %dd= display_finished(@planting)
-
+        - if @planting.finished?
+          %dt Finished:
+          %dd= display_finished(@planting)
         - if @planting.crop.median_lifespan.present?
           %dt Expected Lifespan:
           %dd #{@planting.crop.median_lifespan} days
@@ -63,33 +69,23 @@
           %dt Last Harvest:
           %dd #{@planting.days_to_last_harvest} days after planting
 
-    %p= render 'plantings/harvests', planting: @planting
-    %p= render 'plantings/progress', planting: @planting, show_explanation: true
+      %dt Progress
+      %dd= render 'plantings/progress', planting: @planting, show_explanation: true
 
-    = render 'plantings/actions', planting: @planting
-
-  .col-md-6
+  .col-xs-12.col-sm-6
     = render partial: "crops/index_card", locals: { crop: @planting.crop }
     - if @planting.owner.location
       %p
         %small
           View other plantings, members and more near
           = link_to @planting.owner.location, place_path(@planting.owner.location, anchor: "plantings")
-- if @planting.description
-  %h2 Notes
-
-  :growstuff_markdown
-    #{ @planting.description != "" ? strip_tags(@planting.description) : "No description given." }
-
-- if !@planting.photos.empty? || (can?(:edit, @planting) && can?(:create, Photo))
-  %h2 Photos
-
-  .row
-    - @planting.photos.includes(:owner).each do |p|
-      .col-md-2.six-across
-        = render partial: 'photos/thumbnail', locals: { photo: p }
-    - if can?(:create, Photo) && can?(:edit, @planting)
-      .col-md-2
-        .thumbnail{ style: 'height: 220px' }
-          %p{ style: 'text-align: center; padding-top: 50px' }
-            = link_to "Add photo", new_photo_path(type: "planting", id: @planting.id), class: 'btn btn-primary'
+.row
+  .col-md-6
+    - if @planting.description
+      %h2 Notes
+      :growstuff_markdown
+        #{ @planting.description != "" ? strip_tags(@planting.description) : "No description given." }
+    = render 'plantings/harvests', planting: @planting
+    = render 'plantings/descendants', planting: @planting
+  .col-md-6
+    = render 'photos/item_photos', item: @planting, type: 'planting', photos: @photos

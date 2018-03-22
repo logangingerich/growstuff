@@ -5,7 +5,9 @@ feature "Planting a crop", :js, :elasticsearch do
   let(:member) { create :member }
   let!(:maize) { create :maize }
   let(:garden) { create :garden, owner: member }
-  let!(:planting) { create :planting, garden: garden, planted_at: Date.parse("2013-3-10") }
+  let!(:planting) do
+    create :planting, garden: garden, owner: member, planted_at: Date.parse("2013-3-10")
+  end
 
   background do
     login_as member
@@ -108,8 +110,8 @@ feature "Planting a crop", :js, :elasticsearch do
       end
 
       expect(page).to have_content "planting was successfully created"
-      expect(page).to_not have_content "Progress: 0% - not planted yet"
-      expect(page).to_not have_content "Not enough data"
+      expect(page).not_to have_content "Progress: 0% - not planted yet"
+      expect(page).not_to have_content "Not enough data"
     end
 
     it "should show that planting is 100% complete (no date specified)" do
@@ -176,7 +178,7 @@ feature "Planting a crop", :js, :elasticsearch do
     fill_in "Finished date", with: "2015-06-25"
     click_button "Save"
     expect(page).to have_content "planting was successfully updated"
-    expect(page).to_not have_content "Progress: Not enough data"
+    expect(page).not_to have_content "Progress: Not enough data"
   end
 
   scenario "Marking a planting as finished" do
@@ -268,6 +270,7 @@ feature "Planting a crop", :js, :elasticsearch do
   describe "Marking a planting as finished from the show page" do
     let(:path) { planting_path(planting) }
     let(:link_text) { "Mark as finished" }
+
     it_behaves_like "append date"
   end
 

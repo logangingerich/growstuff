@@ -39,7 +39,14 @@ class Harvest < ActiveRecord::Base
 
   ##
   ## Scopes
-  default_scope { joins(:owner) }
+  default_scope { joins(:owner) } # Ensures owner exists
+  scope :interesting, -> { has_photos.one_per_owner }
+  scope :recent, -> { order(created_at: :desc) }
+  scope :one_per_owner, lambda {
+    joins("JOIN members m ON (m.id=harvests.owner_id)
+           LEFT OUTER JOIN harvests h2
+           ON (m.id=h2.owner_id AND harvests.id < h2.id)").where("h2 IS NULL")
+  }
 
   ##
   ## Validations
@@ -58,6 +65,7 @@ class Harvest < ActiveRecord::Base
     in: WEIGHT_UNITS_VALUES.values, message: "%<value>s is not a valid unit"
   }
   validate :crop_must_match_planting
+  validate :owner_must_match_planting
   validate :harvest_must_be_after_planting
 
   def time_from_planting_to_harvest
@@ -123,12 +131,19 @@ class Harvest < ActiveRecord::Base
   end
 
   def default_photo
-    photos.first || crop.default_photo
+    photos.order(created_at: :desc).first || crop.default_photo
   end
+
+  private
 
   def crop_must_match_planting
     return if planting.blank? # only check if we are linked to a planting
     errors.add(:planting, "must be the same crop") unless crop == planting.crop
+  end
+
+  def owner_must_match_planting
+    return if planting.blank? # only check if we are linked to a planting
+    errors.add(:owner, "of harvest must be the same as planting") unless owner == planting.owner
   end
 
   def harvest_must_be_after_planting

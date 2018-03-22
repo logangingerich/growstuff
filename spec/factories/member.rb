@@ -2,12 +2,12 @@ FactoryBot.define do
   sequence(:email) { |n| "member#{n}@example.com" }
   sequence(:login_name) { |n| "member#{n}" }
 
-  factory :member, aliases: [:author, :owner, :sender, :recipient, :creator] do
+  factory :member, aliases: %i(author owner sender recipient creator) do
     login_name { generate(:login_name) }
     password 'password1'
     email { generate(:email) }
     tos_agreement true
-    confirmed_at Time.now
+    confirmed_at { Time.now }
     show_email false
     bio 'I love seeds'
 

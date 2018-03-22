@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 source 'https://rubygems.org'
 
 ruby '2.4.1'
@@ -10,6 +11,9 @@ gem 'bundler', '>=1.1.5'
 gem 'coffee-rails'
 gem 'haml'
 gem 'sass-rails'
+
+# API data
+gem 'jsonapi-resources'
 
 # CSS framework
 gem 'bootstrap-sass'
@@ -29,9 +33,12 @@ gem 'cancancan'                    # for checking member privileges
 gem 'csv_shaper'                   # CSV export
 gem 'figaro'                       # for handling config via ENV variables
 gem 'gibbon', '~>1.2.0'            # for Mailchimp newsletter subscriptions
-gem 'leaflet-markercluster-rails'
-gem 'leaflet-rails', '~> 0.7.7'    # Newer versions break tests - see https://travis-ci.org/CloCkWeRX/growstuff/builds/200984350
-gem 'pg'
+
+# Maps
+gem 'leaflet-rails'
+gem 'rails-assets-leaflet.markercluster', source: 'https://rails-assets.org'
+
+gem 'pg', '< 1.0.0'                # Upstream bug, see https://github.com/Growstuff/growstuff/pull/1539
 gem 'ruby-units'                   # for unit conversion
 gem 'unicorn'                      # http server
 
@@ -40,7 +47,6 @@ gem 'comfortable_mexican_sofa'     # content management system
 gem 'bootstrap-kaminari-views'     # bootstrap views for kaminari
 gem 'kaminari'                     # pagination
 
-gem 'activemerchant'
 gem 'active_utils'
 gem 'sidekiq'
 
@@ -71,8 +77,7 @@ gem 'omniauth-facebook'
 gem 'omniauth-flickr', '>= 0.0.15'
 gem 'omniauth-twitter'
 
-# For charting data
-gem 'd3-rails', '~> 3.5' # 4.* produces Error: <spyOn> : could not find an object to spy upon for linear() - see https://travis-ci.org/Growstuff/growstuff/jobs/204461482
+gem "chartkick"
 
 # client for Elasticsearch. Elasticsearch is a flexible
 # and powerful, distributed, real-time search and analytics engine.
@@ -119,7 +124,6 @@ group :development do
 end
 
 group :development, :test do
-  gem "active_merchant-paypal-bogus-gateway"
   gem 'bullet'                          # performance tuning by finding unnecesary queries
   gem 'byebug'                          # debugging
   gem 'capybara'                        # integration tests
@@ -128,6 +132,7 @@ group :development, :test do
   gem 'coveralls', require: false       # coverage analysis
   gem 'database_cleaner'
   gem 'factory_bot_rails'               # for creating test data
+  gem 'faker'
   gem 'haml-i18n-extractor'
   gem 'haml-rails'                      # HTML templating language
   gem 'haml_lint'                       # Checks haml files for goodness
@@ -137,7 +142,7 @@ group :development, :test do
   gem 'rainbow', '< 2.2.0' # See https://github.com/sickill/rainbow/issues/44
   gem 'rspec-activemodel-mocks'
   gem 'rspec-rails' # unit testing framework
-  gem 'rubocop', '<= 0.47.1', require: false # Pin to rubocop (0.47.1) as 0.48.0 is buggy
+  gem 'rubocop'
   gem 'selenium-webdriver'
   gem 'webrat' # provides HTML matchers for view tests
 end
@@ -150,3 +155,5 @@ end
 group :travis do
   gem 'platform-api'
 end
+gem 'loofah', '>= 2.2.1'
+gem 'rack-protection', '>= 2.0.1'

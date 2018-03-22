@@ -26,14 +26,15 @@ describe PhotoAssociationsController do
     describe "another member's harvest from another member's photo" do
       let(:harvest) { FactoryBot.create :harvest }
       let(:photo) { FactoryBot.create :photo }
+
       it do
         expect do
           begin
             delete :destroy, valid_params
-          rescue
+          rescue StandardError
             nil
           end
-        end.not_to change { photo.harvests.count }
+        end.not_to change(photo.harvests, :count)
       end
       it { expect { delete :destroy, valid_params }.to raise_error(ActiveRecord::RecordNotFound) }
     end
