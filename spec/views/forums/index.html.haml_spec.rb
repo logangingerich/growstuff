@@ -1,29 +1,19 @@
-## DEPRECATION NOTICE: Do not add new tests to this file!
-##
-## View and controller tests are deprecated in the Growstuff project
-## We no longer write new view and controller tests, but instead write
-## feature tests (in spec/features) using Capybara (https://github.com/jnicklas/capybara).
-## These test the full stack, behaving as a browser, and require less complicated setup
-## to run. Please feel free to delete old view/controller tests as they are reimplemented
-## in feature tests.
-##
-## If you submit a pull request containing new view or controller tests, it will not be
-## merged.
+# frozen_string_literal: true
 
 require 'rails_helper'
 
 describe "forums/index" do
-  before(:each) do
-    @admin = FactoryGirl.create(:admin_member)
-    controller.stub(:current_user) { @admin }
-    @forum1 = FactoryGirl.create(:forum)
-    @forum2 = FactoryGirl.create(:forum)
-    assign(:forums, [@forum1, @forum2])
+  let(:admin) { FactoryBot.create(:admin_member) }
+  let(:forum1) { FactoryBot.create(:forum) }
+  let(:forum2) { FactoryBot.create(:forum) }
+  before do
+    controller.stub(:current_user) { admin }
+    assign(:forums, [forum1, forum2])
   end
 
   it "renders a list of forums" do
     render
-    assert_select "h2", text: @forum1.name, count: 2
+    assert_select "h2", text: forum1.name, count: 2
   end
 
   it "doesn't display posts for empty forums" do
@@ -32,16 +22,17 @@ describe "forums/index" do
   end
 
   context "posts" do
-    before(:each) do
-      @post = FactoryGirl.create(:forum_post, forum: @forum1)
-      @comment = FactoryGirl.create(:comment, post: @post)
-      render
-    end
+    let!(:post) { FactoryBot.create(:forum_post, forum: forum1) }
+    let!(:comment) { FactoryBot.create(:comment, post: post) }
+    before { render }
 
-    it "displays posts" do
-      assert_select "table"
-      rendered.should have_content @post.subject
-      rendered.should have_content Time.zone.today.to_s(:short)
+    describe "displays posts" do
+      it { assert_select "table" }
+
+      # only check for the first 20 chars, because it can be truncated when long
+      it { expect(rendered).to have_content post.subject[0..20] }
+
+      it { expect(rendered).to have_content Time.zone.today.to_s(:short) }
     end
 
     it "displays comment count" do

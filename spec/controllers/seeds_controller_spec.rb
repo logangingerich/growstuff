@@ -1,23 +1,39 @@
-## DEPRECATION NOTICE: Do not add new tests to this file!
-##
-## View and controller tests are deprecated in the Growstuff project.
-## We no longer write new view and controller tests, but instead write
-## feature tests (in spec/features) using Capybara (https://github.com/jnicklas/capybara).
-## These test the full stack, behaving as a browser, and require less complicated setup
-## to run. Please feel free to delete old view/controller tests as they are reimplemented
-## in feature tests.
-##
-## If you submit a pull request containing new view or controller tests, it will not be
-## merged.
+# frozen_string_literal: true
 
 require 'rails_helper'
 
-describe SeedsController do
+describe SeedsController, :search do
+  let(:owner) { FactoryBot.create(:member) }
+
   describe "GET index" do
-    it "picks up owner from params" do
-      owner = FactoryGirl.create(:member)
-      get :index, owner: owner.slug
-      assigns(:owner).should eq(owner)
+    describe "picks up owner from params" do
+      before do
+        Seed.reindex
+        get :index, params: { member_slug: owner.slug }
+      end
+
+      it { expect(assigns(:owner)).to eq(owner) }
+    end
+  end
+
+  describe 'GET new' do
+    before { sign_in owner }
+
+    it { expect(response).to be_successful }
+
+    context 'no parent planting' do
+      before { get :new }
+    end
+
+    context 'with parent planting' do
+      let!(:planting) { FactoryBot.create :planting, owner: owner }
+
+      before do
+        Seed.reindex
+        get :new, params: { planting_slug: planting.to_param }
+      end
+
+      it { expect(assigns(:planting)).to eq(planting) }
     end
   end
 end

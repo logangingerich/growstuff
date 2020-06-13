@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+
 class PlantPartsController < ApplicationController
   load_and_authorize_resource
   respond_to :html, :json
   responders :flash
 
   def index
-    @plant_parts = PlantPart.all
+    @plant_parts = PlantPart.all.order(:name)
     respond_with(@plant_parts)
   end
 

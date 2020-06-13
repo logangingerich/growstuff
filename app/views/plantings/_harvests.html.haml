@@ -1,8 +1,12 @@
-- unless planting.harvests.empty?
-  Harvests:
-  %ul
+%h2 Harvests
+
+- if can? :edit, planting
+  = render 'harvests/modal', harvest: Harvest.new(crop: planting.crop, planting: planting)
+- if planting.harvests.empty?
+  %p No harvests recorded
+  - if !planting.finished? && can?(:edit, planting) && can?(:create, Harvest)
+    %p Record your harvests here to improve crop predictions, and you'll be able to compare with your garden next season.
+- else
+  .index-cards
     - planting.harvests.each do |harvest|
-      %li
-        = harvest.harvested_at ? harvest.harvested_at : "undated"
-        = link_to harvest, harvest_path(harvest)
-  = link_to "more harvests from this planting", planting_harvests_path(planting)
+      = render 'harvests/thumbnail', harvest: harvest

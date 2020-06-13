@@ -1,19 +1,11 @@
-- if !planting.planted?
-  - if show_explanation == true
-    Progress: 0% - not planted yet
-  = render "plantings/progress_bar", status: "not planted", progress: 0
+- if planting.active && planting.annual? && planting.percentage_grown.present?
+  .progress
+    .progress-bar.bg-success{"aria-valuemax" => "100", "aria-valuemin" => "0", "aria-valuenow" => planting.percentage_grown, role: "progressbar", style: "width: #{planting.percentage_grown}%"}
 
-- elsif planting.finished?
-  - if show_explanation == true
-    Progress: 100%
-  = render "plantings/progress_bar", status: 'finished', progress: 100
+  .float-left #{sprintf '%.0f', planting.percentage_grown}%
 
-- elsif planting.days_before_maturity.nil?
-  - if show_explanation == true
-    Progress: Not calculated, days before maturity unknown
-  = render "plantings/progress_bar", status: "unknown", progress: nil
-
-- else
-  - if show_explanation == true
-    Progress: #{planting.percentage_grown}%
-  = render "plantings/progress_bar", status: 'growing', progress: planting.percentage_grown
+  - unless planting.finish_predicted_at.blank?
+    .float-right
+      -# = planting.finish_predicted_at.strftime(Date::DATE_FORMATS[:ymd])
+      = I18n.t('date.abbr_month_names')[planting.finish_predicted_at.month]
+      = planting.finish_predicted_at.year

@@ -8,14 +8,15 @@ submit the change with your pull request.
 
 ## Committers
 
-- Alex Bayley / [Skud](https://github.com/Skud)
 - Cesy / [cesy](https://github.com/cesy)
 - Miles Gould / [pozorvlak](https://github.com/pozorvlak)
-- Taylor Griffin / [tygriffin](https://github.com/tygriffin)
 - Mackenzie Morgan / [maco](https://github.com/maco)
+- Brenda Wallace / [br3nda](https://github.com/br3nda)
 
 ## Contributors
 
+- Alex Bayley / [Skud](https://github.com/Skud)
+- Taylor Griffin / [tygriffin](https://github.com/tygriffin)
 - Joseph Caudle / [jcaudle](https://github.com/jcaudle)
 - Ricky Amianym / [amianym](https://github.com/amianym)
 - Juliet Kemp / [julietk](https://github.com/julietk)
@@ -73,7 +74,6 @@ submit the change with your pull request.
 - Lucas Nogueira / [lucasnogueira](https://github.com/lucasnogueira)
 - Charley Lewittes / [ctlewitt](https://github.com/ctlewitt)
 - Kristine Nicole Polvoriza / [polveenomials](https://github.com/polveenomials)
-- Brenda Wallace / [br3nda](https://github.com/br3nda)
 - Jim Stallings / [jestallin](https://github.com/jestallin)
 - Alyssa Ransbury / [alran](https://github.com/alran)
 - Thomas Countz / [thomascountz](https://github.com/thomascountz)
@@ -81,7 +81,19 @@ submit the change with your pull request.
 - Arun Kumar / [arun1595](https://github.com/arun1595)
 - Harry Brodsky / [hbrodsk1](https://github.com/hbrodsk1)
 - Jeff Kingswood / [ancyentmariner](https://github.com/ancyentmariner)
+- Logan Gingerich / [logangingerich](https://github.com/logangingerich)
+- Mark Taffman / [mftaff](https://github.com/mftaff)
+- Jennifer Kruse / [jenkr55](https://github.com/jenkr55)
+- Christopher Bazin / [RobotScissors](https://github.com/robotscissors)
+- Ahmed Shahin / [codeminator](https://www.github.com/codeminator)
+- Brandon Baker / [brandonbaker40](https://github.com/brandonbaker40)
+- Alex Darr / [apdarr](https://github.com/apdarr)
+- Taylor William / [bestest-mensch](https://github.com/bestest-mensch)
+- André Aubin / [lambda2](https://github.com/lambda2)
+- Martina Simicic / [simicic](https://github.com/simicic)
 
 ## Bots
 
-- Security and Dependency Updates / [deppbot](https://github.com/deppbot)
+### Security and Dependency Updates
+- DeppBot / [deppbot](https://github.com/deppbot)
+- dependabot-preview[bot] [dependabot](https://github.com/dependabot-bot) / [dependabot-preview](https://github.com/apps/dependabot-preview)

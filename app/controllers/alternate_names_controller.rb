@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 class AlternateNamesController < ApplicationController
-  before_action :authenticate_member!, except: [:index, :show]
+  before_action :authenticate_member!, except: %i(index)
   load_and_authorize_resource
   respond_to :html, :json
   responders :flash
@@ -7,7 +9,7 @@ class AlternateNamesController < ApplicationController
   # GET /alternate_names
   # GET /alternate_names.json
   def index
-    @alternate_names = AlternateName.all
+    @alternate_names = AlternateName.all.order(:name)
     respond_with(@alternate_names)
   end
 

@@ -1,83 +1,67 @@
-class Seed < ActiveRecord::Base
+# frozen_string_literal: true
+
+class Seed < ApplicationRecord
   extend FriendlyId
   include PhotoCapable
-  friendly_id :seed_slug, use: [:slugged, :finders]
+  include Finishable
+  include Ownable
+  include SearchSeeds
+  friendly_id :seed_slug, use: %i(slugged finders)
 
+  TRADABLE_TO_VALUES = %w(nowhere locally nationally internationally).freeze
+  ORGANIC_VALUES = ['certified organic', 'non-certified organic', 'conventional/non-organic', 'unknown'].freeze
+  GMO_VALUES = ['certified GMO-free', 'non-certified GMO-free', 'GMO', 'unknown'].freeze
+  HEIRLOOM_VALUES = %w(heirloom hybrid unknown).freeze
+
+  #
+  # Relationships
   belongs_to :crop
-  belongs_to :owner, class_name: 'Member', foreign_key: 'owner_id', counter_cache: true
+  belongs_to :parent_planting, class_name: 'Planting', foreign_key: 'parent_planting_id',
+                               optional: true, inverse_of: :child_seeds # parent
+  has_many :child_plantings, class_name: 'Planting',
+                             foreign_key: 'parent_seed_id', dependent: :nullify,
+                             inverse_of: :parent_seed # children
 
-  default_scope { joins(:owner).order(created_at: :desc) }
-
+  #
+  # Validations
   validates :crop, approved: true
-  delegate :name, to: :crop
-  delegate :default_photo, to: :crop
-
   validates :crop, presence: { message: "must be present and exist in our database" }
-  validates :quantity,
-    numericality: {
-      only_integer: true,
-      greater_than_or_equal_to: 0
-    },
-    allow_nil: true
-  validates :days_until_maturity_min,
-    numericality: {
-      only_integer: true,
-      greater_than_or_equal_to: 0
-    },
-    allow_nil: true
-  validates :days_until_maturity_max,
-    numericality: {
-      only_integer: true,
-      greater_than_or_equal_to: 0
-    },
-    allow_nil: true
+  validates :quantity, allow_nil:    true,
+                       numericality: { only_integer: true, greater_than_or_equal_to: 0 }
+  validates :days_until_maturity_min, allow_nil:    true,
+                                      numericality: { only_integer: true, greater_than_or_equal_to: 0 }
+  validates :days_until_maturity_max, allow_nil:    true,
+                                      numericality: { only_integer: true, greater_than_or_equal_to: 0 }
+  validates :tradable_to, allow_blank: false,
+                          inclusion:   { in: TRADABLE_TO_VALUES, message: "You may only trade seed nowhere, "\
+                                                "locally, nationally, or internationally" }
+  validates :organic, allow_blank: false,
+                      inclusion:   { in: ORGANIC_VALUES, message: "You must say whether the seeds "\
+                                             "are organic or not, or that you don't know" }
+  validates :gmo, allow_blank: false,
+                  inclusion:   { in: GMO_VALUES, message: "You must say whether the seeds are "\
+                                                        "genetically modified or not, or that you don't know" }
+  validates :heirloom, allow_blank: false,
+                       inclusion:   { in: HEIRLOOM_VALUES, message: "You must say whether the seeds"\
+                                                                  "are heirloom, hybrid, or unknown" }
 
+  #
+  # Delegations
+  delegate :name, to: :crop, prefix: true
+  delegate :location, :latitude, :longitude, to: :owner
+  delegate :login_name, :slug, :location, to: :owner, prefix: true
+
+  #
+  # Scopes
+  default_scope { joins(:owner).merge(Member.kept) } # Ensure owner exists
   scope :tradable, -> { where.not(tradable_to: 'nowhere') }
   scope :interesting, -> { tradable.has_location }
   scope :has_location, -> { joins(:owner).where.not("members.location": nil) }
-  TRADABLE_TO_VALUES = %w(nowhere locally nationally internationally).freeze
-  validates :tradable_to, inclusion: { in: TRADABLE_TO_VALUES,
-                                       message: "You may only trade seed nowhere, "\
-                                                "locally, nationally, or internationally" },
-                          allow_nil: false,
-                          allow_blank: false
+  scope :recent, -> { order(created_at: :desc) }
+  scope :active, -> { where('finished <> true').where('finished_at IS NULL OR finished_at < ?', Time.zone.now) }
 
-  ORGANIC_VALUES = [
-    'certified organic',
-    'non-certified organic',
-    'conventional/non-organic',
-    'unknown'
-  ].freeze
-  validates :organic, inclusion: { in: ORGANIC_VALUES,
-                                   message: "You must say whether the seeds "\
-                                             "are organic or not, or that you don't know" },
-                      allow_nil: false,
-                      allow_blank: false
-
-  GMO_VALUES = [
-    'certified GMO-free',
-    'non-certified GMO-free',
-    'GMO',
-    'unknown'
-  ].freeze
-  validates :gmo, inclusion: { in: GMO_VALUES,
-                               message: "You must say whether the seeds are "\
-                                        "genetically modified or not, or that you don't know" },
-                  allow_nil: false,
-                  allow_blank: false
-
-  HEIRLOOM_VALUES = %w(heirloom hybrid unknown).freeze
-  validates :heirloom, inclusion: { in: HEIRLOOM_VALUES,
-                                    message: "You must say whether the seeds are heirloom, hybrid, or unknown" },
-                       allow_nil: false,
-                       allow_blank: false
-
-  def tradable?
-    if tradable_to == 'nowhere'
-      false
-    else
-      true
-    end
+  def tradable
+    tradable_to != 'nowhere'
   end
 
   def seed_slug

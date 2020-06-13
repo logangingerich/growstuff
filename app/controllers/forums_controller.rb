@@ -1,11 +1,14 @@
+# frozen_string_literal: true
+
 class ForumsController < ApplicationController
   load_and_authorize_resource
   respond_to :html, :json
+  responders :flash
 
   # GET /forums
   # GET /forums.json
   def index
-    @forums = Forum.all
+    @forums = Forum.all.order(:name)
     respond_with(@forums)
   end
 
